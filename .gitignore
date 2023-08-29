@@ -1,0 +1,6 @@
+.env
+cache/
+
+main
+
+docker-compose.yml
