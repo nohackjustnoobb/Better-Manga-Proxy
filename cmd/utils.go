@@ -10,7 +10,12 @@ import (
 )
 
 func log(ctx *fasthttp.RequestCtx) {
-	fmt.Printf("[%s] %q %q -> %q %d\n", ctx.Time().Format("2006-01-02 15:04:05"), ctx.Method(), ctx.RemoteIP(), ctx.RequestURI(), ctx.Response.StatusCode())
+	var remoteIp = string(ctx.Request.Header.Peek("X-Real-IP"))
+	if remoteIp == "" {
+		remoteIp = ctx.RemoteIP().String()
+	}
+
+	fmt.Printf("[%s] %q %q -> %q %d\n", ctx.Time().Format("2006-01-02 15:04:05"), ctx.Method(), remoteIp, ctx.RequestURI(), ctx.Response.StatusCode())
 }
 
 func updateTimestamp(hash string) {

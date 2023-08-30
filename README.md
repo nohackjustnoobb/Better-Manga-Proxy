@@ -37,3 +37,17 @@ The following command will pull the docker image and start the server.
 ```bash
 sudo docker-compose up -d
 ```
+
+### Manual Setup
+
+In order to run the server, it is essential to create a `.env` file. An example of the `.env` file is shown below:
+
+`.env`
+
+```python
+ADDRESS=<BACKEND SERVER URL>
+
+# optional
+# remove it disabled limitation for cache size
+MAX_CACHE_SIZE=1024 # unit - MB
+```
