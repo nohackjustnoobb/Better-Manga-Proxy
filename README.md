@@ -51,3 +51,15 @@ ADDRESS=<BACKEND SERVER URL>
 # remove it disabled limitation for cache size
 MAX_CACHE_SIZE=1024 # unit - MB
 ```
+
+Make sure that you have Golang installed.
+
+```bash
+# 1. Clone the project
+# 2. CD into the project and install the dependencies
+git clone https://github.com/nohackjustnoobb/Better-Manga-Proxy.git
+cd Better-Manga-Proxy && go mod download
+
+# 3. Build and run the server
+go run ./cmd
+```
