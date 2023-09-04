@@ -33,7 +33,7 @@ func countCacheSize() float64 {
 }
 
 func cacheManager() {
-	defer fmt.Print("* CacheManager is not running *")
+	defer fmt.Print("* CacheManager disabled *")
 
 	maxCacheSizeStr := os.Getenv("MAX_CACHE_SIZE")
 	if maxCacheSizeStr == "" {

@@ -20,6 +20,15 @@ import (
 var client *fasthttp.Client
 var settings map[string]any
 
+type Image struct {
+	hash string
+	data []byte
+}
+
+var imagePool = sync.Pool{
+	New: func() interface{} { return new(Image) },
+}
+
 func fetchImage(driver string, destination string, genre string) (contentType string, body []byte) {
 	// generate all the urls
 	var urls []string
@@ -81,10 +90,12 @@ func fetchImage(driver string, destination string, genre string) (contentType st
 	return contentType, body
 }
 
-func saveImage(hash string, image []byte) {
+func saveImage(image *Image) {
+	defer imagePool.Put(image)
+
 	defer func() {
 		if recover() != nil {
-			os.Remove("cache/" + hash + ".jpeg")
+			os.Remove("cache/" + image.hash + ".jpeg")
 		}
 	}()
 
@@ -92,8 +103,8 @@ func saveImage(hash string, image []byte) {
 	newpath := filepath.Join(".", "cache")
 	os.MkdirAll(newpath, os.ModePerm)
 
-	fo, _ := os.Create("cache/" + hash + ".jpeg")
-	src, _ := imgconv.Decode(bytes.NewReader(image))
+	fo, _ := os.Create("cache/" + image.hash + ".jpeg")
+	src, _ := imgconv.Decode(bytes.NewReader(image.data))
 	imgconv.Write(fo, src, &imgconv.FormatOption{Format: imgconv.JPEG})
 }
 
@@ -131,11 +142,18 @@ func mainHandler(ctx *fasthttp.RequestCtx) {
 
 	// fetch the image
 	contentType, body := fetchImage(driver, destination, genre)
+
+	// get image object
+	var image = imagePool.Get().(*Image)
+	// set data
+	image.hash = hash
+	image.data = body
+
 	ctx.Response.Header.SetContentType(contentType)
 	ctx.Response.SetBody(body)
 
 	// cache the image
-	go saveImage(hash, body)
+	go saveImage(image)
 }
 
 func main() {
