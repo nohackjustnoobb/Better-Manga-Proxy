@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sunshineplan/imgconv"
 	"github.com/valyala/fasthttp"
+	fastprefork "github.com/valyala/fasthttp/prefork"
 )
 
 var client *fasthttp.Client
@@ -164,14 +165,25 @@ func main() {
 	fetchSettings()
 
 	// Clear the screen
-	screen.Clear()
-	screen.MoveTopLeft()
 
-	fmt.Println(time.Now().Format("January 2, 2006 - 15:04:05"))
-	fmt.Printf("Serving at port %s \n", port)
+	if !fastprefork.IsChild() {
+		screen.Clear()
+		screen.MoveTopLeft()
 
-	// Create cache manager
-	go cacheManager()
+		fmt.Println(time.Now().Format("January 2, 2006 - 15:04:05"))
+		fmt.Printf("Serving at port %s \n", port)
 
-	fasthttp.ListenAndServe(port, mainHandler)
+		// Create cache manager
+		go cacheManager()
+
+	} else {
+		fmt.Println("Starting worker")
+	}
+
+	server := &fasthttp.Server{
+		Handler:               mainHandler,
+		MaxIdleWorkerDuration: time.Minute * 30,
+	}
+
+	fastprefork.New(server).ListenAndServe(port)
 }
