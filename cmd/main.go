@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -21,6 +22,8 @@ import (
 var client *fasthttp.Client
 var settings map[string]any
 
+var maxClientEachRequest = 3
+
 type Image struct {
 	hash string
 	data []byte
@@ -28,6 +31,13 @@ type Image struct {
 
 var imagePool = sync.Pool{
 	New: func() interface{} { return new(Image) },
+}
+
+func shuffle(array []string) {
+	for i := range array {
+		j := rand.Intn(i + 1)
+		array[i], array[j] = array[j], array[i]
+	}
 }
 
 func fetchImage(driver string, destination string, genre string) (contentType string, body []byte) {
@@ -45,6 +55,11 @@ func fetchImage(driver string, destination string, genre string) (contentType st
 
 	if len(urls) == 0 {
 		urls = append(urls, destination)
+	}
+
+	if len(urls) > maxClientEachRequest {
+		shuffle(urls)
+		urls = urls[:maxClientEachRequest]
 	}
 
 	// fetch the image
