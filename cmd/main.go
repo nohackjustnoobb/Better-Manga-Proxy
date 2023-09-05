@@ -25,6 +25,7 @@ type Image struct {
 }
 
 var (
+	port                 = ":8080"
 	maxClientEachRequest = 3
 
 	settings map[string]any
@@ -93,14 +94,17 @@ func fetchImage(driver string, destination string, genre string) (contentType st
 			if err == nil {
 				contentType = string(resp.Header.ContentType())
 				body = resp.Body()
-				fasthttp.ReleaseResponse(resp)
 
 				// lock the mutex
 				if mu.TryLock() {
 					wg.Done()
 				}
 
+			} else {
+				fmt.Println(err)
 			}
+
+			fasthttp.ReleaseResponse(resp)
 
 		}(url)
 	}
@@ -177,7 +181,6 @@ func mainHandler(ctx *fasthttp.RequestCtx) {
 }
 
 func main() {
-	port := ":8080"
 	godotenv.Load()
 
 	fetchSettings()
