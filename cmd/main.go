@@ -19,19 +19,25 @@ import (
 	fastprefork "github.com/valyala/fasthttp/prefork"
 )
 
-var client *fasthttp.Client
-var settings map[string]any
-
-var maxClientEachRequest = 3
-
 type Image struct {
 	hash string
 	data []byte
 }
 
-var imagePool = sync.Pool{
-	New: func() interface{} { return new(Image) },
-}
+var (
+	maxClientEachRequest = 3
+
+	settings map[string]any
+
+	client = &fasthttp.Client{
+		NoDefaultUserAgentHeader: true,
+		DisablePathNormalizing:   true,
+	}
+
+	imagePool = sync.Pool{
+		New: func() interface{} { return new(Image) },
+	}
+)
 
 func shuffle(array []string) {
 	for i := range array {
@@ -87,16 +93,14 @@ func fetchImage(driver string, destination string, genre string) (contentType st
 			if err == nil {
 				contentType = string(resp.Header.ContentType())
 				body = resp.Body()
+				fasthttp.ReleaseResponse(resp)
 
 				// lock the mutex
 				if mu.TryLock() {
 					wg.Done()
-				} else {
-					return
 				}
 
 			}
-			fasthttp.ReleaseResponse(resp)
 
 		}(url)
 	}
@@ -176,7 +180,6 @@ func main() {
 	port := ":8080"
 	godotenv.Load()
 
-	initClient()
 	fetchSettings()
 
 	// Clear the screen
@@ -197,7 +200,7 @@ func main() {
 
 	server := &fasthttp.Server{
 		Handler:               mainHandler,
-		MaxIdleWorkerDuration: time.Minute * 30,
+		MaxIdleWorkerDuration: time.Minute * 5,
 	}
 
 	fastprefork.New(server).ListenAndServe(port)

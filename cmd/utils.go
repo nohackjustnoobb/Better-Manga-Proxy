@@ -22,14 +22,6 @@ func updateTimestamp(hash string) {
 	os.Chtimes("cache/"+hash+".jpeg", time.Now(), time.Now())
 }
 
-func initClient() {
-	// init fasthttp client
-	client = &fasthttp.Client{
-		NoDefaultUserAgentHeader: true,
-		DisablePathNormalizing:   true,
-	}
-}
-
 func fetchSettings() {
 	// get proxy settings
 	req := fasthttp.AcquireRequest()
