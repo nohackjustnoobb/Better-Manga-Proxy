@@ -39,7 +39,7 @@ var (
 			Resolver: &net.Resolver{
 				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 					d := net.Dialer{}
-					return d.DialContext(ctx, "tcp", "192.168.2.1:53")
+					return d.DialContext(ctx, "udp", "8.8.8.8:53")
 				},
 			},
 		}).Dial,
