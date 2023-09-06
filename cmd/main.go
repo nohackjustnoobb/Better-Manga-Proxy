@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -33,6 +35,14 @@ var (
 	client = &fasthttp.Client{
 		NoDefaultUserAgentHeader: true,
 		DisablePathNormalizing:   true,
+		Dial: (&fasthttp.TCPDialer{
+			Resolver: &net.Resolver{
+				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+					d := net.Dialer{}
+					return d.DialContext(ctx, "tcp", "192.168.2.1:53")
+				},
+			},
+		}).Dial,
 	}
 
 	imagePool = sync.Pool{
@@ -93,7 +103,8 @@ func fetchImage(driver string, destination string, genre string) (contentType st
 
 			if err == nil {
 				contentType = string(resp.Header.ContentType())
-				body = resp.Body()
+				body = make([]byte, len(resp.Body()))
+				copy(body, resp.Body())
 
 				// lock the mutex
 				if mu.TryLock() {
