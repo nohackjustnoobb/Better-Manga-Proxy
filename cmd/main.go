@@ -2,12 +2,10 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
-	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -35,14 +33,6 @@ var (
 	client = &fasthttp.Client{
 		NoDefaultUserAgentHeader: true,
 		DisablePathNormalizing:   true,
-		Dial: (&fasthttp.TCPDialer{
-			Resolver: &net.Resolver{
-				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-					d := net.Dialer{}
-					return d.DialContext(ctx, "udp", "8.8.8.8:53")
-				},
-			},
-		}).Dial,
 	}
 
 	imagePool = sync.Pool{
