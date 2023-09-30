@@ -23,17 +23,23 @@ func updateTimestamp(hash string) {
 }
 
 func fetchSettings() {
-	// get proxy settings
-	req := fasthttp.AcquireRequest()
-	req.SetRequestURI(os.Getenv("ADDRESS") + "driver/proxy")
-	req.Header.SetMethod(fasthttp.MethodGet)
+	for {
+		// get proxy settings
+		req := fasthttp.AcquireRequest()
+		req.SetRequestURI(os.Getenv("ADDRESS") + "driver/proxy")
+		req.Header.SetMethod(fasthttp.MethodGet)
 
-	resp := fasthttp.AcquireResponse()
-	err := client.Do(req, resp)
-	fasthttp.ReleaseRequest(req)
+		resp := fasthttp.AcquireResponse()
+		err := client.Do(req, resp)
+		fasthttp.ReleaseRequest(req)
 
-	if err == nil {
-		json.Unmarshal([]byte(resp.Body()), &settings)
+		if err == nil {
+			json.Unmarshal([]byte(resp.Body()), &settings)
+			fasthttp.ReleaseResponse(resp)
+			break
+		}
+		fasthttp.ReleaseResponse(resp)
+		fmt.Printf("Failed to fetch settings. Retrying in 5 seconds\n")
+		time.Sleep(time.Second * 5)
 	}
-	fasthttp.ReleaseResponse(resp)
 }

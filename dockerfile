@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . .
 RUN go mod download
 
-RUN GOAMD64=v3 go build -C cmd -o ../main -ldflags="-s -w"
+RUN GOAMD64=v3 go build -C src -o ../main -ldflags="-s -w"
 
 FROM alpine:3 as final
 WORKDIR /app
