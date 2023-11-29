@@ -70,6 +70,7 @@ func fetchImage(driver string, destination string, genre string) (contentType st
 	}
 
 	// fetch the image
+	var counter = 0
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	wg.Add(1)
@@ -91,7 +92,7 @@ func fetchImage(driver string, destination string, genre string) (contentType st
 			err := client.Do(req, resp)
 			fasthttp.ReleaseRequest(req)
 
-			if err == nil {
+			if err == nil && resp.StatusCode() == 200 {
 				contentType = string(resp.Header.ContentType())
 				body = make([]byte, len(resp.Body()))
 				copy(body, resp.Body())
@@ -100,9 +101,12 @@ func fetchImage(driver string, destination string, genre string) (contentType st
 				if mu.TryLock() {
 					wg.Done()
 				}
-
 			} else {
-				fmt.Println(err)
+				counter++
+				if counter == len(urls) {
+					fasthttp.ReleaseResponse(resp)
+					panic(nil)
+				}
 			}
 
 			fasthttp.ReleaseResponse(resp)
